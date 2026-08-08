@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelPro AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+<header class="topbar">
+    <div class="brand">🎨 PixelPro AI</div>
+
+    <label class="upload-btn">
+        📁 Open Image
+        <input type="file" id="upload" accept="image/*" hidden>
+    </label>
+
+    <button id="downloadBtn">💾 Download</button>
+</header>
+
+<main class="app">
+
+    <!-- LEFT TOOLBAR -->
+    <aside class="toolbar">
+
+        <h3>Tools</h3>
+
+        <button id="zoomOutBtn">➖ Zoom Out</button>
+        <button id="zoomInBtn">➕ Zoom In</button>
+        <button id="rotateBtn">🔄 Rotate</button>
+        <button id="flipBtn">↔️ Flip</button>
+
+    </aside>
+
+
+    <!-- EDITOR -->
+    <section class="workspace">
+
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+
+    </section>
+
+
+    <!-- RIGHT PANEL -->
+    <aside class="properties">
+
+        <h3>Adjustments</h3>
+
+        <label for="brightness">
+            Brightness
+        </label>
+
+        <input
+            type="range"
+            id="brightness"
+            min="0"
+            max="200"
+            value="100"
+        >
+
+        <span id="brightnessValue">100</span>%
+
+
+        <label for="contrast">
+            Contrast
+        </label>
+
+        <input
+            type="range"
+            id="contrast"
+            min="0"
+            max="200"
+            value="100"
+        >
+
+        <span id="contrastValue">100</span>%
+
+
+        <button id="filterBtn">
+            🎨 Grayscale
+        </button>
+
+    </aside>
+
+</main>
+
+<script src="script.js"></script>
+
+</body>
+</html>
