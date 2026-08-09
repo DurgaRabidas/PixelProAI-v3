@@ -2,496 +2,134 @@ const upload = document.getElementById("upload");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const brightnessSlider = document.getElementById("brightness");
-const contrastSlider = document.getElementById("contrast");
-
-const brightnessValue = document.getElementById("brightnessValue");
-const contrastValue = document.getElementById("contrastValue");
-
-const zoomInBtn = document.getElementById("zoomInBtn");
-const zoomOutBtn = document.getElementById("zoomOutBtn");
-const rotateBtn = document.getElementById("rotateBtn");
-const flipBtn = document.getElementById("flipBtn");
-const filterBtn = document.getElementById("filterBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-
-let image = new Image();
-
-let imageLoaded = false;
-
-let rotation = 0;
-let zoom = 1;
-let flipX = 1;
+let img = new Image();
 
 let brightness = 100;
 let contrast = 100;
+let rotation = 0;
+let flipH = 1;
+let flipV = 1;
+let filterMode = "none";
 
-let grayscale = false;
+upload.addEventListener("change", function (e) {
+    const file = e.target.files[0];
 
+    if (!file) return;
 
-/* =========================
-   CANVAS SIZE
-========================= */
+    const reader = new FileReader();
 
-function resizeCanvas() {
+    reader.onload = function (event) {
+        img.onload = function () {
 
-    const container = document.querySelector(".canvas-container");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
 
-    if (!container) return;
+            rotation = 0;
+            flipH = 1;
+            flipV = 1;
 
-    canvas.width = Math.max(100, container.clientWidth);
-    canvas.height = Math.max(100, container.clientHeight);
+            drawImage();
+        };
 
-    drawImage();
-}
+        img.src = event.target.result;
+    };
 
+    reader.readAsDataURL(file);
+});
 
-/* =========================
-   DRAW IMAGE
-========================= */
 
 function drawImage() {
 
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    if (!img.complete || !img.naturalWidth) return;
 
-    if (!imageLoaded) {
-        return;
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
 
-    /*
-       Move to canvas center
-    */
+    ctx.translate(canvas.width / 2, canvas.height / 2);
 
-    ctx.translate(
-        canvas.width / 2,
-        canvas.height / 2
-    );
+    ctx.rotate(rotation * Math.PI / 180);
 
+    ctx.scale(flipH, flipV);
 
-    /*
-       Rotate
-    */
-
-    ctx.rotate(
-        rotation * Math.PI / 180
-    );
-
-
-    /*
-       Calculate image size
-       so it fits inside workspace
-    */
-
-    const availableWidth =
-        canvas.width * 0.85;
-
-    const availableHeight =
-        canvas.height * 0.85;
-
-    const widthRatio =
-        availableWidth / image.width;
-
-    const heightRatio =
-        availableHeight / image.height;
-
-    let fitScale =
-        Math.min(
-            widthRatio,
-            heightRatio
-        );
-
-    /*
-       Prevent extremely small images
-    */
-
-    if (!isFinite(fitScale) || fitScale <= 0) {
-        fitScale = 1;
-    }
-
-
-    /*
-       Apply zoom
-    */
-
-    const finalScale =
-        fitScale * zoom;
-
-
-    const drawWidth =
-        image.width * finalScale;
-
-    const drawHeight =
-        image.height * finalScale;
-
-
-    /*
-       Flip
-    */
-
-    ctx.scale(
-        finalScale * flipX,
-        finalScale
-    );
-
-
-    /*
-       Apply image adjustments
-
-       IMPORTANT:
-       Brightness and contrast are applied
-       independently of grayscale.
-    */
-
-    let filters =
-        "brightness(" +
-        brightness +
-        "%) " +
-
-        "contrast(" +
-        contrast +
-        "%)";
-
-    if (grayscale) {
-
-        filters +=
-            " grayscale(100%)";
-    }
-
-    ctx.filter = filters;
-
-
-    /*
-       Draw image
-    */
+    ctx.filter =
+        "brightness(" + brightness + "%) " +
+        "contrast(" + contrast + "%) " +
+        filterMode;
 
     ctx.drawImage(
-        image,
-        -image.width / 2,
-        -image.height / 2
+        img,
+        -img.naturalWidth / 2,
+        -img.naturalHeight / 2,
+        img.naturalWidth,
+        img.naturalHeight
     );
 
     ctx.restore();
 }
 
 
-/* =========================
-   UPLOAD IMAGE
-========================= */
+// BRIGHTNESS
+document.getElementById("brightness").addEventListener("input", function () {
 
-upload.addEventListener(
-    "change",
-    function (event) {
+    brightness = Number(this.value);
 
-        const file =
-            event.target.files[0];
+    drawImage();
+});
 
-        if (!file) return;
 
-        const reader =
-            new FileReader();
+// CONTRAST
+document.getElementById("contrast").addEventListener("input", function () {
 
-        reader.onload =
-            function (e) {
+    contrast = Number(this.value);
 
-                image.onload =
-                    function () {
+    drawImage();
+});
 
-                        imageLoaded = true;
 
-                        rotation = 0;
-                        zoom = 1;
-                        flipX = 1;
+// ROTATE
+document.getElementById("rotateBtn").addEventListener("click", function () {
 
-                        brightness = 100;
-                        contrast = 100;
+    rotation += 90;
 
-                        grayscale = false;
-
-                        brightnessSlider.value = 100;
-                        contrastSlider.value = 100;
-
-                        brightnessValue.textContent = "100";
-                        contrastValue.textContent = "100";
-
-                        resizeCanvas();
-                    };
-
-                image.src = e.target.result;
-            };
-
-        reader.readAsDataURL(file);
+    if (rotation >= 360) {
+        rotation = 0;
     }
-);
+
+    drawImage();
+});
 
 
-/* =========================
-   BRIGHTNESS
-========================= */
+// FLIP
+document.getElementById("flipBtn").addEventListener("click", function () {
 
-brightnessSlider.addEventListener(
-    "input",
-    function () {
+    flipH *= -1;
 
-        brightness =
-            Number(this.value);
+    drawImage();
+});
 
-        brightnessValue.textContent =
-            brightness;
 
-        drawImage();
+// FILTER
+document.getElementById("filterBtn").addEventListener("click", function () {
+
+    if (filterMode === "none") {
+        filterMode = "grayscale(100%)";
+    } else {
+        filterMode = "none";
     }
-);
 
+    drawImage();
+});
 
-/* =========================
-   CONTRAST
-========================= */
 
-contrastSlider.addEventListener(
-    "input",
-    function () {
+// DOWNLOAD
+document.getElementById("downloadBtn").addEventListener("click", function () {
 
-        contrast =
-            Number(this.value);
+    const link = document.createElement("a");
 
-        contrastValue.textContent =
-            contrast;
+    link.download = "edited-image.png";
 
-        drawImage();
-    }
-);
+    link.href = canvas.toDataURL("image/png");
 
-
-/* =========================
-   GRAYSCALE
-========================= */
-
-filterBtn.addEventListener(
-    "click",
-    function () {
-
-        grayscale =
-            !grayscale;
-
-        drawImage();
-    }
-);
-
-
-/* =========================
-   ROTATE
-========================= */
-
-rotateBtn.addEventListener(
-    "click",
-    function () {
-
-        if (!imageLoaded) return;
-
-        rotation += 90;
-
-        if (rotation >= 360) {
-            rotation = 0;
-        }
-
-        drawImage();
-    }
-);
-
-
-/* =========================
-   FLIP
-========================= */
-
-flipBtn.addEventListener(
-    "click",
-    function () {
-
-        if (!imageLoaded) return;
-
-        flipX *= -1;
-
-        drawImage();
-    }
-);
-
-
-/* =========================
-   ZOOM IN
-========================= */
-
-zoomInBtn.addEventListener(
-    "click",
-    function () {
-
-        if (!imageLoaded) return;
-
-        zoom += 0.1;
-
-        if (zoom > 4) {
-            zoom = 4;
-        }
-
-        drawImage();
-    }
-);
-
-
-/* =========================
-   ZOOM OUT
-========================= */
-
-zoomOutBtn.addEventListener(
-    "click",
-    function () {
-
-        if (!imageLoaded) return;
-
-        zoom -= 0.1;
-
-        if (zoom < 0.2) {
-            zoom = 0.2;
-        }
-
-        drawImage();
-    }
-);
-
-
-/* =========================
-   DOWNLOAD
-========================= */
-
-downloadBtn.addEventListener(
-    "click",
-    function () {
-
-        if (!imageLoaded) {
-
-            alert(
-                "Please upload an image first."
-            );
-
-            return;
-        }
-
-        /*
-           Create a temporary canvas
-           for the exported image.
-        */
-
-        const exportCanvas =
-            document.createElement("canvas");
-
-        const exportCtx =
-            exportCanvas.getContext("2d");
-
-
-        /*
-           Use the original image dimensions
-           for good output quality.
-        */
-
-        exportCanvas.width =
-            image.width;
-
-        exportCanvas.height =
-            image.height;
-
-
-        exportCtx.save();
-
-        exportCtx.translate(
-            image.width / 2,
-            image.height / 2
-        );
-
-
-        exportCtx.scale(
-            flipX,
-            1
-        );
-
-
-        exportCtx.rotate(
-            rotation * Math.PI / 180
-        );
-
-
-        let filters =
-            "brightness(" +
-            brightness +
-            "%) " +
-
-            "contrast(" +
-            contrast +
-            "%)";
-
-        if (grayscale) {
-
-            filters +=
-                " grayscale(100%)";
-        }
-
-        exportCtx.filter =
-            filters;
-
-
-        exportCtx.drawImage(
-            image,
-            -image.width / 2,
-            -image.height / 2
-        );
-
-        exportCtx.restore();
-
-
-        const link =
-            document.createElement("a");
-
-        link.download =
-            "PixelProAI-Edited.png";
-
-        link.href =
-            exportCanvas.toDataURL(
-                "image/png"
-            );
-
-        link.click();
-    }
-);
-
-
-/* =========================
-   SCREEN RESIZE
-========================= */
-
-window.addEventListener(
-    "resize",
-    function () {
-
-        if (imageLoaded) {
-            resizeCanvas();
-        }
-    }
-);
-
-
-/* =========================
-   INITIAL CANVAS
-========================= */
-
-window.addEventListener(
-    "load",
-    function () {
-
-        resizeCanvas();
-    }
-);
+    link.click();
+});
